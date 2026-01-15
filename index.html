@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Print Job Receipts - Other Tomorrows</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <style>
+      :root {
+        --otter-blue: #11369A;
+        --leather-blue: #161844;
+        --dua-red: #E60C4E;
+        --donald-blue: #3D8EFF;
+        --discotheque-blue: #91BFFF;
+        --post-pink: #FFE4EC;
+        --tatte-cream: #FFFBF4;
+        
+        --primary: var(--otter-blue);
+        --accent: var(--dua-red);
+        --bg: var(--tatte-cream);
+        --text: var(--leather-blue);
+        --light-blue: var(--discotheque-blue);
+        
+        --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        --mono: 'JetBrains Mono', 'Courier New', monospace;
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 20px;
+      }
+      
+      .container { max-width: 700px; margin: 0 auto; }
+      
+      header {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--primary);
+        color: white;
+        border-radius: 12px;
+        margin-bottom: 40px;
+      }
+      
+      h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+      .subtitle { opacity: 0.9; font-size: 16px; }
+      
+      .card {
+        background: white;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(17, 54, 154, 0.08);
+        margin-bottom: 24px;
+      }
+      
+      .form-group { margin-bottom: 24px; }
+      
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--primary);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      input, select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--light-blue);
+        border-radius: 8px;
+        font-family: var(--sans);
+        font-size: 16px;
+        transition: all 0.2s;
+        background: white;
+      }
+      
+      input:focus, select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(17, 54, 154, 0.1);
+      }
+      
+      input[type="number"] { font-family: var(--mono); }
+      
+      button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+      }
+      
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(17, 54, 154, 0.3);
+      }
+      
+      button:active:not(:disabled) { transform: translateY(0); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      
+      .btn-accent { background: var(--accent); }
+      .btn-accent:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(230, 12, 78, 0.3); }
+      
+      .line-items { margin-top: 32px; }
+      
+      .line-item {
+        background: var(--bg);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid var(--primary);
+      }
+      
+      .line-item-info { flex: 1; }
+      .line-item-type { font-weight: 600; color: var(--primary); margin-bottom: 4px; }
+      .line-item-details { font-size: 14px; color: #666; font-family: var(--mono); }
+      
+      .line-item-price {
+        font-family: var(--mono);
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--accent);
+        margin-right: 12px;
+      }
+      
+      .remove-btn {
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 20px;
+        padding: 4px 8px;
+        width: auto;
+      }
+      
+      .remove-btn:hover { color: var(--accent); transform: none; box-shadow: none; }
+      
+      .total {
+        background: var(--primary);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+        margin-top: 16px;
+      }
+      
+      .total-amount { font-family: var(--mono); }
+      .hidden { display: none; }
+      
+      .message {
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        text-align: center;
+      }
+      
+      .message.success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+      .message.error { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+      
+      #calculatedPrice {
+        margin: 20px 0;
+        padding: 16px;
+        background: var(--bg);
+        border-radius: 8px;
+        font-family: var(--mono);
+        font-size: 18px;
+        text-align: center;
+        display: none;
+      }
+      
+      #priceDisplay { color: var(--accent); font-weight: 600; }
+      
+      /* Hidden receipt template for image capture */
+      #receipt-capture {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 500px;
+        padding-top: 40px;
+        padding-left: 40px;
+        padding-right: 40px;
+        padding-bottom:10px;
+        background: white;
+        color: #333;
+      }
+
+      .receipt-header { 
+        border-bottom: 4px solid var(--otter-blue); 
+        padding-bottom: 20px; 
+        margin-bottom: 20px; 
+      }
+
+      .receipt-header h2 { color:#11369A; margin:0; font-family: var(--sans); }
+      .receipt-header p { margin:5px 0; font-family: var(--sans); }
+
+      .receipt-table { width:100%; padding: 4px; border-collapse: collapse; font-family: var(--mono); }
+      .receipt-table tr { text-align: left; border-bottom: 2px solid #333; }
+      .receipt-table th { font-size: 10px; padding-bottom: 8px; }
+
+      .receipt-body {
+        padding: 4px;
+        font-size: 10px;
+      }
+
+      .receipt-total {
+        text-align:right; 
+        font-size:24px; 
+        font-weight:bold; 
+        margin-top:20px; 
+        border-top:2px solid #333; 
+        padding-top:10px; 
+        font-family: var(--mono);
+      }
+
+      .receipt-footer {
+        margin-top: 30px; 
+        font-size: 8px; 
+        color: #888; 
+        text-align: center; 
+        font-family: var(--sans);
+      }
+  </style>
+</head>
+<body>
+  <div id="mainForm" class="container">
+    <header>
+      <h1>OT Print Shop Receipts</h1>
+      <p class="subtitle">Create receipts for your print job</p>
+    </header>
+
+    <div id="messageArea"></div>
+
+    <div class="card">
+      <h2 style="margin-bottom: 24px; color: var(--primary);">Add Line Item</h2>
+      
+      <div class="form-group">
+        <label for="printType">Print Type</label>
+        <select id="printType">
+          <option value="">Select print type...</option>
+          <option value="PLOTTER">Plotter</option>
+          <option value="LASER">Laser Printer</option>
+          <option value="INKJET">Inkjet Printer</option>
+          <option value="3D PRINT">3D Print</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="material">Material/Paper Type</label>
+        <select id="material" disabled>
+          <option value="">Select material...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" placeholder="Enter quantity" min="0" step="0.01">
+      </div>
+
+      <div id="calculatedPrice">
+        <strong>Price:</strong> <span id="priceDisplay">$0.00</span>
+      </div>
+
+      <button onclick="addLineItem()">Add to Receipt</button>
+    </div>
+
+    <div class="line-items" id="lineItems" style="display: none;">
+      <h2 style="margin-bottom: 16px; color: var(--primary);">Receipt Items</h2>
+      <div id="itemsList"></div>
+      <div class="total">
+        <span>Total</span>
+        <span class="total-amount" id="totalAmount">$0.00</span>
+      </div>
+    </div>
+
+    <div class="card" id="clientInfo" style="display: none;">
+      <h2 style="margin-bottom: 24px; color: var(--primary);">Client Information</h2>
+      
+      <div class="form-group">
+        <label for="clientName">Client Name</label>
+        <input type="text" id="clientName" placeholder="Enter client name">
+      </div>
+
+      <div class="form-group">
+        <label for="projectName">Print Memo</label>
+        <input type="text" id="projectName" placeholder="Enter print memo">
+      </div>
+
+      <div class="form-group">
+        <label for="receiptDate">Date</label>
+        <input type="date" id="receiptDate">
+      </div>
+
+      <button class="btn-accent" id="generateBtn" onclick="generateReceipt(this)">Generate Receipt Image</button>
+    </div>
+  </div>
+
+  <div id="receipt-capture">
+    <div class="receipt-header">
+      <h2>OTHER TOMORROWS</h2>
+      <p>OT Print Shop Receipt</p>
+    </div>
+    <div id="capture-meta" style="margin-bottom:20px; font-family: 'Inter', sans-serif; line-height: 1.6;"></div>
+    <table class="receipt-table" id="capture-table">
+      <thead>
+        <tr>
+          <th style="padding:10px 0;">Description</th>
+          <th style="text-align:center;">RATE</th>
+          <th style="text-align:right;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody class="receipt-body" id="capture-body"></tbody>
+    </table>
+    <div class="receipt-total" id="capture-total"></div>
+    <p class="receipt-footer">Proudly Printed in Boston, MA @ OT</p>
+  </div>
+
+  <script>
+    // Configuration
+    const CONFIG = {
+      GOOGLE_SHEET_ID: '1Z0DBTC4RDAkPmtoY-HmI00rhVuvb7ivGIvPASI6GXvQ',
+      SHEET_NAME: 'PrintingPrices'
+    };
+
+    // State
+    let pricingData = [];
+    let lineItems = [];
+
+    // Initialize
+    async function loadPricingData() {
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%20*&sheet=${CONFIG.SHEET_NAME}`;
+        
+        const script = document.createElement('script');
+        script.src = url;
+        
+        const promise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Request timeout - sheet may not be publicly accessible'));
+          }, 10000);
+          
+          window.google = window.google || {};
+          window.google.visualization = window.google.visualization || {};
+          window.google.visualization.Query = window.google.visualization.Query || {};
+          
+          // Hack to capture the callback
+          window.google.visualization.Query.setResponse = function(response) {
+            clearTimeout(timeout);
+            resolve(response);
+          };
+          
+          script.onerror = () => {
+            clearTimeout(timeout);
+            reject(new Error('Failed to load sheet - check Sheet ID and sharing settings'));
+          };
+        });
+        
+        document.body.appendChild(script);
+        const json = await promise;
+        document.body.removeChild(script);
+        
+        if (!json.table || !json.table.rows) {
+          throw new Error('Invalid data structure from Google Sheets');
+        }
+        
+        pricingData = json.table.rows.slice(1).map(row => ({
+          printType: row.c[0]?.v || '',
+          material: row.c[1]?.v || '',
+          cost: parseFloat(row.c[2]?.v || 0),
+          unit: row.c[3]?.v || '',
+          note: row.c[4]?.v || ''
+        })).filter(item => item.printType && item.material);
+        
+        console.log('✓ Pricing data loaded:', pricingData.length, 'items');
+        
+        if (pricingData.length === 0) {
+          throw new Error('No pricing data found in sheet');
+        }
+        
+        showMessage('Pricing data loaded successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Error loading pricing:', error);
+        showMessage(`Error loading pricing data: ${error.message}`, 'error');
+      }
+    }
+
+    // Form logic
+    function updateMaterialOptions() {
+      const printType = document.getElementById('printType').value;
+      const materialSelect = document.getElementById('material');
+      const quantityInput = document.getElementById('quantity');
+      
+      materialSelect.innerHTML = '<option value="">Select material...</option>';
+      materialSelect.disabled = !printType;
+      quantityInput.value = '';
+      document.getElementById('calculatedPrice').style.display = 'none';
+      
+      if (printType) {
+        const materials = pricingData.filter(item => item.printType === printType);
+        materials.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.material;
+          option.textContent = `${item.material} ($${item.cost}/${item.unit})`;
+          materialSelect.appendChild(option);
+        });
+      }
+    }
+
+    function calculatePrice() {
+      const printType = document.getElementById('printType').value;
+      const material = document.getElementById('material').value;
+      const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+      
+      if (!printType || !material || quantity <= 0) {
+        document.getElementById('calculatedPrice').style.display = 'none';
+        return null;
+      }
+      
+      const pricing = pricingData.find(p => p.printType === printType && p.material === material);
+      if (!pricing) return null;
+      
+      let price = pricing.cost * quantity;
+      
+      // Add machine fee for 3D print materials (not labor)
+      if (printType === '3D PRINT' && material !== 'Model Prep Labor') {
+        price += 10;
+      }
+      
+      document.getElementById('calculatedPrice').style.display = 'block';
+      document.getElementById('priceDisplay').textContent = `$${price.toFixed(2)}`;
+      
+      return { pricing, quantity, price };
+    }
+
+    function addLineItem() {
+      const result = calculatePrice();
+      if (!result) {
+        showMessage('Please fill in all fields with valid values', 'error');
+        return;
+      }
+      
+      const { pricing, quantity, price } = result;
+      
+      lineItems.push({
+        printType: pricing.printType,
+        material: pricing.material,
+        quantity,
+        unit: pricing.unit,
+        unitPrice: pricing.cost,
+        totalPrice: price,
+        note: pricing.note
+      });
+      
+      renderLineItems();
+      
+      // Reset form
+      document.getElementById('printType').value = '';
+      document.getElementById('material').innerHTML = '<option value="">Select material...</option>';
+      document.getElementById('material').disabled = true;
+      document.getElementById('quantity').value = '';
+      document.getElementById('calculatedPrice').style.display = 'none';
+      
+      // Show client info section
+      document.getElementById('clientInfo').style.display = 'block';
+      
+      showMessage('Item added successfully!', 'success');
+    }
+
+    function renderLineItems() {
+      const container = document.getElementById('itemsList');
+      const lineItemsSection = document.getElementById('lineItems');
+      
+      if (lineItems.length === 0) {
+        lineItemsSection.style.display = 'none';
+        return;
+      }
+      
+      lineItemsSection.style.display = 'block';
+      
+      container.innerHTML = lineItems.map((item, index) => `
+        <div class="line-item">
+          <div class="line-item-info">
+            <div class="line-item-type">${item.printType} - ${item.material}</div>
+            <div class="line-item-details">
+              ${item.quantity} ${item.unit} × $${item.unitPrice.toFixed(2)}/${item.unit}
+              ${item.note ? ` (${item.note})` : ''}
+            </div>
+          </div>
+          <div class="line-item-price">$${item.totalPrice.toFixed(2)}</div>
+          <button class="remove-btn" onclick="removeLineItem(${index})">×</button>
+        </div>
+      `).join('');
+      
+      const total = lineItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+    }
+
+    function removeLineItem(index) {
+      lineItems.splice(index, 1);
+      renderLineItems();
+      
+      if (lineItems.length === 0) {
+        document.getElementById('clientInfo').style.display = 'none';
+      }
+    }
+
+    async function generateReceipt(buttonElement) {
+      const clientName = document.getElementById('clientName').value.trim();
+      const projectName = document.getElementById('projectName').value.trim();
+      const receiptDate = document.getElementById('receiptDate').value;
+      const button = buttonElement || document.getElementById('generateBtn');
+
+      if (lineItems.length === 0) {
+        showMessage('Please add items to the receipt first!', 'error');
+        return;
+      }
+
+      if (!clientName || !projectName || !receiptDate) {
+        showMessage('Please fill in all client information fields', 'error');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Generating Image...';
+      
+      try {
+        // Update hidden receipt template
+        document.getElementById('capture-meta').innerHTML = `
+          <strong>Client:</strong> ${clientName}<br>
+          <strong>Memo:</strong> ${projectName}<br>
+          <strong>Date:</strong> ${receiptDate}
+        `;
+        
+        // Populate table using lineItems (fixed variable name)
+        document.getElementById('capture-body').innerHTML = lineItems.map(item => `
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:12px 0;">${item.printType}, ${item.material} (${item.quantity} ${item.unit})</td>
+            <td style="text-align:center;">$${item.unitPrice.toFixed(2)}</td>
+            <td style="text-align:right;">$${item.totalPrice.toFixed(2)}</td>
+          </tr>`).join('');
+          
+        // Set total (fixed ID selector)
+        document.getElementById('capture-total').innerText = `TOTAL: ${document.getElementById('totalAmount').innerText}`;
+
+        // Generate image
+        const captureArea = document.getElementById('receipt-capture');
+        const canvas = await html2canvas(captureArea, { 
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+        
+        // Download image
+        const link = document.createElement('a');
+        const filename = `Receipt-${projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${receiptDate}.png`;
+        link.download = filename;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        
+        showMessage(`Receipt generated successfully: ${filename}`, 'success');
+        
+        // Reset form after delay
+        setTimeout(() => {
+          lineItems = [];
+          renderLineItems();
+          document.getElementById('clientName').value = '';
+          document.getElementById('projectName').value = '';
+          document.getElementById('receiptDate').value = '';
+          document.getElementById('receiptDate').valueAsDate = new Date();
+          document.getElementById('clientInfo').style.display = 'none';
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Error generating receipt:', error);
+        showMessage('Error generating receipt. Please try again.', 'error');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Generate Receipt Image';
+      }
+    }
+
+    function showMessage(text, type) {
+      const messageArea = document.getElementById('messageArea');
+      messageArea.innerHTML = `<div class="message ${type}">${text}</div>`;
+      setTimeout(() => {
+        messageArea.innerHTML = '';
+      }, 5000);
+    }
+
+    // Event listeners
+    document.getElementById('printType').addEventListener('change', updateMaterialOptions);
+    document.getElementById('material').addEventListener('change', calculatePrice);
+    document.getElementById('quantity').addEventListener('input', calculatePrice);
+
+    // Set default date to today
+    document.getElementById('receiptDate').valueAsDate = new Date();
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+      if (window.html2canvas) {
+        console.log('✓ html2canvas loaded successfully');
+      } else {
+        console.error('✗ html2canvas failed to load');
+        showMessage('Warning: Image generation library failed to load', 'error');
+      }
+      loadPricingData();
+    });
+  </script>
+</body>
+</html>
